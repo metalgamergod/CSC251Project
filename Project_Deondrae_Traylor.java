@@ -20,7 +20,7 @@ import java.util.Scanner;
  * the "Project_firstname_lastname" class you already created when
  * you set up your GitHub repository -- e.g. Project_John_Doe.java.
  */
-public class Project_firstname_lastname
+public class Project_Deondrae_Traylor
 {
     public static void main(String[] args)
     {
