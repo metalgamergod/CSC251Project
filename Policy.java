@@ -1,27 +1,26 @@
 /**
- * The Policy class models an insurance policy for one person.
- * It stores the policyholder's personal information and provides
- * methods to calculate the policyholder's BMI and the price of
- * the insurance policy.
+ * The Policy class models an insurance policy. It stores the policy
+ * number, the provider name, and a PolicyHolder object representing
+ * the person the policy belongs to (a Policy "has a" PolicyHolder).
  *
- * Note: BMI and Policy Price are NOT stored in instance fields.
- * They are calculated on demand inside their getter methods so
- * that the values are never "stale" -- if a policyholder's height,
- * weight, age, or smoking status changes after the object is
- * created, the BMI and price will automatically reflect the new
- * values the next time they are calculated.
+ * A static field keeps track of how many Policy objects have been
+ * created.
+ *
+ * Note: the Policy Price is NOT stored in an instance field. It is
+ * calculated on demand inside its getter method so the value is never
+ * "stale" -- if the policyholder's age, smoking status, height, or
+ * weight changes after the object is created, the price will
+ * automatically reflect the new values.
  */
 public class Policy
 {
     // Fields (attributes)
     private int policyNumber;
     private String providerName;
-    private String firstName;
-    private String lastName;
-    private int age;
-    private String smokingStatus;   // "smoker" or "non-smoker"
-    private double height;          // in inches
-    private double weight;          // in pounds
+    private PolicyHolder policyHolder;
+
+    // Static field: counts how many Policy objects have been created
+    private static int policyCount = 0;
 
     // Constants used in the price calculation
     private static final double BASE_FEE = 600.0;
@@ -39,30 +38,25 @@ public class Policy
     {
         policyNumber = 0;
         providerName = "";
-        firstName = "";
-        lastName = "";
-        age = 0;
-        smokingStatus = "non-smoker";
-        height = 0.0;
-        weight = 0.0;
+        policyHolder = new PolicyHolder();
+        policyCount++;
     }
 
     /**
      * Constructor that accepts arguments to fully initialize
      * a Policy object.
+     *
+     * A copy of the PolicyHolder argument is stored rather than the
+     * reference itself. This prevents the calling code from keeping a
+     * reference to this object's private data and changing it from
+     * outside the class.
      */
-    public Policy(int policyNumber, String providerName, String firstName,
-                  String lastName, int age, String smokingStatus,
-                  double height, double weight)
+    public Policy(int policyNumber, String providerName, PolicyHolder policyHolder)
     {
         this.policyNumber = policyNumber;
         this.providerName = providerName;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.age = age;
-        this.smokingStatus = smokingStatus;
-        this.height = height;
-        this.weight = weight;
+        this.policyHolder = new PolicyHolder(policyHolder);
+        policyCount++;
     }
 
     // Setters (mutators)
@@ -76,34 +70,13 @@ public class Policy
         this.providerName = providerName;
     }
 
-    public void setFirstName(String firstName)
+    /**
+     * Stores a copy of the PolicyHolder argument so that outside code
+     * cannot hold a reference to this object's private data.
+     */
+    public void setPolicyHolder(PolicyHolder policyHolder)
     {
-        this.firstName = firstName;
-    }
-
-    public void setLastName(String lastName)
-    {
-        this.lastName = lastName;
-    }
-
-    public void setAge(int age)
-    {
-        this.age = age;
-    }
-
-    public void setSmokingStatus(String smokingStatus)
-    {
-        this.smokingStatus = smokingStatus;
-    }
-
-    public void setHeight(double height)
-    {
-        this.height = height;
-    }
-
-    public void setWeight(double weight)
-    {
-        this.weight = weight;
+        this.policyHolder = new PolicyHolder(policyHolder);
     }
 
     // Getters (accessors)
@@ -117,46 +90,22 @@ public class Policy
         return providerName;
     }
 
-    public String getFirstName()
+    /**
+     * Returns a copy of this Policy's PolicyHolder object rather than a
+     * reference to it, so outside code cannot modify this object's
+     * private data.
+     */
+    public PolicyHolder getPolicyHolder()
     {
-        return firstName;
-    }
-
-    public String getLastName()
-    {
-        return lastName;
-    }
-
-    public int getAge()
-    {
-        return age;
-    }
-
-    public String getSmokingStatus()
-    {
-        return smokingStatus;
-    }
-
-    public double getHeight()
-    {
-        return height;
-    }
-
-    public double getWeight()
-    {
-        return weight;
+        return new PolicyHolder(policyHolder);
     }
 
     /**
-     * Calculates and returns the policyholder's BMI.
-     * BMI = (Weight * 703) / (Height ^ 2)
-     *
-     * This value is calculated every time the method is called
-     * (rather than being stored in a field) so it is never stale.
+     * Returns the number of Policy objects that have been created.
      */
-    public double getBMI()
+    public static int getPolicyCount()
     {
-        return (weight * 703) / (height * height);
+        return policyCount;
     }
 
     /**
@@ -174,22 +123,38 @@ public class Policy
     {
         double price = BASE_FEE;
 
-        if (age > AGE_THRESHOLD)
+        if (policyHolder.getAge() > AGE_THRESHOLD)
         {
             price += AGE_FEE;
         }
 
-        if (smokingStatus.equalsIgnoreCase("smoker"))
+        if (policyHolder.getSmokingStatus().equalsIgnoreCase("smoker"))
         {
             price += SMOKER_FEE;
         }
 
-        double bmi = getBMI();
+        double bmi = policyHolder.getBMI();
         if (bmi > BMI_THRESHOLD)
         {
             price += (bmi - BMI_THRESHOLD) * BMI_FEE_RATE;
         }
 
         return price;
+    }
+
+    /**
+     * Returns a String containing the policy information, including the
+     * information of the PolicyHolder associated with this policy.
+     */
+    @Override
+    public String toString()
+    {
+        return String.format(
+                 "Policy Number: %d%n"
+               + "Provider Name: %s%n"
+               + "%s%n"
+               + "Policy Price: $%.2f",
+                 policyNumber, providerName,
+                 policyHolder.toString(), getPolicyPrice());
     }
 }
